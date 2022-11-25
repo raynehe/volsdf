@@ -222,6 +222,7 @@ class VolSDFNetwork(nn.Module):
         dirs = ray_dirs.unsqueeze(1).repeat(1,N_samples,1)
         dirs_flat = dirs.reshape(-1, 3)
 
+        '''下面这行的输入加上ex和ed'''
         sdf, feature_vectors, gradients = self.implicit_network.get_outputs(points_flat)
 
         rgb_flat = self.rendering_network(points_flat, gradients, dirs_flat, feature_vectors)
@@ -236,6 +237,7 @@ class VolSDFNetwork(nn.Module):
             acc_map = torch.sum(weights, -1)
             rgb_values = rgb_values + (1. - acc_map[..., None]) * self.bg_color.unsqueeze(0)
 
+        '''至此计算出了rgb'''
         output = {
             'rgb_values': rgb_values,
         }
