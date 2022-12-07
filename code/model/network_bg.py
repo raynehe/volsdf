@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import time
 
-import utils.general as utils
-from utils import rend_util
+import volsdf.code.utils.general as utils
+from volsdf.code.utils import rend_util
 from model.network import ImplicitNetwork, RenderingNetwork
 from model.density import LaplaceDensity, AbsDensity
 from model.ray_sampler import ErrorBoundSampler

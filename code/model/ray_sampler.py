@@ -1,7 +1,7 @@
 import abc
 import torch
 
-from utils import rend_util
+from volsdf.code.utils import rend_util
 
 class RaySampler(metaclass=abc.ABCMeta):
     def __init__(self,near, far):

@@ -2,8 +2,8 @@ import os
 import torch
 import numpy as np
 
-import utils.general as utils
-from utils import rend_util
+import volsdf.code.utils.general as utils
+from volsdf.code.utils import rend_util
 
 class SceneDataset(torch.utils.data.Dataset):
 
@@ -13,7 +13,7 @@ class SceneDataset(torch.utils.data.Dataset):
                  scan_id=0,
                  ):
 
-        self.instance_dir = os.path.join('../data', data_dir, 'scan{0}'.format(scan_id))
+        self.instance_dir = os.path.join('volsdf/data', data_dir, 'scan{0}'.format(scan_id))
 
         self.total_pixels = img_res[0] * img_res[1]
         self.img_res = img_res
