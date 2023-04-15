@@ -1,0 +1,36 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "fluid_volsdf",
+            "type": "python",
+            "request": "launch",
+            "program": "training/exp_runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--conf", "./confs/fluid.conf",
+                "--scan_id", "4",
+            ],
+            "cwd": "${workspaceFolder}/code",
+            "env": { "PYTHONPATH": "${workspaceFolder}/code" },
+        },
+        {
+            "name": "dtu_volsdf",
+            "type": "python",
+            "request": "launch",
+            "program": "training/exp_runner.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--conf", "./confs/dtu.conf",
+                "--scan_id", "24",
+            ],
+            "cwd": "${workspaceFolder}/code",
+            "env": { "PYTHONPATH": "${workspaceFolder}/code" },
+        }
+    ]
+}

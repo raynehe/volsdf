@@ -46,11 +46,12 @@ class UniformSampler(RaySampler):
 class ErrorBoundSampler(RaySampler):
     def __init__(self, scene_bounding_sphere, near, N_samples, N_samples_eval, N_samples_extra,
                  eps, beta_iters, max_total_iters,
+                 far=-1,
                  inverse_sphere_bg=False, N_samples_inverse_sphere=0, add_tiny=0.0):
-        super().__init__(near, 2.0 * scene_bounding_sphere)
+        super().__init__(near, 2.0 * scene_bounding_sphere if far == -1 else far)
         self.N_samples = N_samples
         self.N_samples_eval = N_samples_eval
-        self.uniform_sampler = UniformSampler(scene_bounding_sphere, near, N_samples_eval, take_sphere_intersection=inverse_sphere_bg)
+        self.uniform_sampler = UniformSampler(scene_bounding_sphere, near, N_samples_eval, take_sphere_intersection=inverse_sphere_bg, far=far)
 
         self.N_samples_extra = N_samples_extra
 
@@ -81,6 +82,10 @@ class ErrorBoundSampler(RaySampler):
         # Algorithm 1
         while not_converge and total_iters < self.max_total_iters:
             points = cam_loc.unsqueeze(1) + samples.unsqueeze(2) * ray_dirs.unsqueeze(1)
+            # print('points',round(points.min().item(),2),round(points.max().item(),2))
+            # print('samples',round(samples.min().item(),2),round(samples.max().item(),2))
+            # print('ray_dirs',round(ray_dirs.min().item(),2),round(ray_dirs.max().item(),2))
+            # print('cam_loc',round(cam_loc.min().item(),2),round(cam_loc.max().item(),2))
             points_flat = points.reshape(-1, 3)
 
             # Calculating the SDF only for the new sampled points
@@ -147,6 +152,7 @@ class ErrorBoundSampler(RaySampler):
                 bound_opacity = (torch.clamp(torch.exp(error_integral),max=1.e6) - 1.0) * transmittance[:,:-1]
 
                 pdf = bound_opacity + self.add_tiny
+                pdf = pdf + 1e-5  # prevent nans
                 pdf = pdf / torch.sum(pdf, -1, keepdim=True)
                 cdf = torch.cumsum(pdf, -1)
                 cdf = torch.cat([torch.zeros_like(cdf[..., :1]), cdf], -1)

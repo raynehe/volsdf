@@ -204,16 +204,31 @@ class VolSDFTrainRunner():
                 model_input["intrinsics"] = model_input["intrinsics"].cuda()
                 model_input["uv"] = model_input["uv"].cuda()
                 model_input['pose'] = model_input['pose'].cuda()
+                # model_input['rays'] = model_input['rays'].cuda()
 
                 model_outputs = self.model(model_input)
                 loss_output = self.loss(model_outputs, ground_truth)
 
                 loss = loss_output['loss']
 
+                # for name, parms in self.model.named_parameters():	
+                #     print('-->name:', name)
+                #     #print('-->para:', parms)
+                #     print('-->grad_requirs:',parms.requires_grad)
+                #     print('-->grad_value:',parms.grad)
+                #     print('-->is_leaf:',parms.is_leaf)
+                #     print("===")
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
+                # for name, parms in self.model.named_parameters():	
+                #     print('-->name:', name)
+                #     #print('-->para:', parms)
+                #     print('-->grad_requirs:',parms.requires_grad)
+                #     print('-->grad_value:',parms.grad)
+                #     print('-->is_leaf:',parms.is_leaf)
+                #     print("===")
                 psnr = rend_util.get_psnr(model_outputs['rgb_values'],
                                           ground_truth['rgb'].cuda().reshape(-1,3))
                 print(

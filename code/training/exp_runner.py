@@ -1,3 +1,6 @@
+import os
+
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import sys
 
 sys.path.append('../code')

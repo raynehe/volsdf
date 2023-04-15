@@ -69,4 +69,7 @@ if __name__ == "__main__":
                         help='Number of cameras, if -1 use all')
 
     args = parser.parse_args()
-    normalize_cameras(args.input_cameras_file, args.output_cameras_file, args.number_of_cams)
+    input_cameras_file = '/home/rayne/datasets/volsdf/fluid/scan0/cameras_before.npz'
+    output_cameras_file = '/home/rayne/datasets/volsdf/fluid/scan0/cameras_after.npz'
+    number_of_cams = 30
+    normalize_cameras(input_cameras_file, output_cameras_file, number_of_cams)

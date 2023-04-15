@@ -42,6 +42,7 @@ class ImplicitNetwork(nn.Module):
             else:
                 out_dim = dims[l + 1]
 
+            # print('layer', l, 'in', dims[l], 'out', out_dim)
             lin = nn.Linear(dims[l], out_dim)
 
             if geometric_init:
@@ -72,17 +73,21 @@ class ImplicitNetwork(nn.Module):
             input = self.embed_fn(input)
 
         x = input
+        # print('input', round(input.min().item(),2),round(input.max().item(),2))
 
         for l in range(0, self.num_layers - 1):
+            # print('layer', l)
             lin = getattr(self, "lin" + str(l))
 
             if l in self.skip_in:
                 x = torch.cat([x, input], 1) / np.sqrt(2)
 
             x = lin(x)
+            # print('x1', round(x.min().item(),2),round(x.max().item(),2))
 
             if l < self.num_layers - 2:
                 x = self.softplus(x)
+            # print('x2', round(x.min().item(),2),round(x.max().item(),2))
 
         return x
 
@@ -137,6 +142,8 @@ class RenderingNetwork(nn.Module):
             d_out,
             dims,
             weight_norm=True,
+            geometric_init=True,
+            bias=1.0,
             multires_view=0,
     ):
         super().__init__()
@@ -156,6 +163,19 @@ class RenderingNetwork(nn.Module):
             out_dim = dims[l + 1]
             lin = nn.Linear(dims[l], out_dim)
 
+            if geometric_init:
+                if l == self.num_layers - 2:
+                    # torch.nn.init.normal_(lin.weight, mean=np.sqrt(np.pi) / np.sqrt(dims[l]), std=0.0001)
+                    torch.nn.init.normal_(lin.weight, mean=0.0, std=0.0001)
+                    torch.nn.init.constant_(lin.bias, -bias)
+                elif multires_view > 0 and l == 0:
+                    torch.nn.init.constant_(lin.bias, 0.0)
+                    torch.nn.init.constant_(lin.weight[:, 3:], 0.0)
+                    torch.nn.init.normal_(lin.weight[:, :3], 0.0, np.sqrt(2) / np.sqrt(out_dim))
+                else:
+                    torch.nn.init.constant_(lin.bias, 0.0)
+                    torch.nn.init.normal_(lin.weight, 0.0, np.sqrt(2) / np.sqrt(out_dim))
+            
             if weight_norm:
                 lin = nn.utils.weight_norm(lin)
 
@@ -199,14 +219,23 @@ class VolSDFNetwork(nn.Module):
 
         self.density = LaplaceDensity(**conf.get_config('density'))
         self.ray_sampler = ErrorBoundSampler(self.scene_bounding_sphere, **conf.get_config('ray_sampler'))
+        # for name, parms in self.implicit_network.named_parameters():	
+        #     print('-->name:', name)
+        #     print('-->para:', parms)
+        #     print('-->grad_requirs:',parms.requires_grad)
+        #     print('-->grad_value:',parms.grad)
+        #     print('-->is_leaf:',parms.is_leaf)
+        #     print("===")
 
     def forward(self, input):
         # Parse model input
         intrinsics = input["intrinsics"]
         uv = input["uv"]
         pose = input["pose"]
+        # rays = input["rays"]
 
         ray_dirs, cam_loc = rend_util.get_camera_params(uv, pose, intrinsics)
+        # ray_dirs, cam_loc = rend_util.get_camera_params(uv, pose, intrinsics, rays)
 
         batch_size, num_pixels, _ = ray_dirs.shape
 
@@ -218,11 +247,14 @@ class VolSDFNetwork(nn.Module):
 
         points = cam_loc.unsqueeze(1) + z_vals.unsqueeze(2) * ray_dirs.unsqueeze(1)
         points_flat = points.reshape(-1, 3)
+        # print('points', round(points.min().item(),2),round(points.max().item(),2))
+        # self.plot_3d( points_flat.cpu().numpy())
 
         dirs = ray_dirs.unsqueeze(1).repeat(1,N_samples,1)
         dirs_flat = dirs.reshape(-1, 3)
 
         sdf, feature_vectors, gradients = self.implicit_network.get_outputs(points_flat)
+        # print('sdf', round(sdf.min().item(),2),round(sdf.max().item(),2))
 
         rgb_flat = self.rendering_network(points_flat, gradients, dirs_flat, feature_vectors)
         rgb = rgb_flat.reshape(-1, N_samples, 3)
@@ -248,6 +280,9 @@ class VolSDFNetwork(nn.Module):
             # add some of the near surface points
             eik_near_points = (cam_loc.unsqueeze(1) + z_samples_eik.unsqueeze(2) * ray_dirs.unsqueeze(1)).reshape(-1, 3)
             eikonal_points = torch.cat([eikonal_points, eik_near_points], 0)
+            # add some neighbour points as unisurf
+            neighbour_points = eikonal_points + (torch.rand_like(eikonal_points) - 0.5) * 0.01   
+            eikonal_points = torch.cat([eikonal_points, neighbour_points], 0)
 
             grad_theta = self.implicit_network.gradient(eikonal_points)
             output['grad_theta'] = grad_theta
@@ -277,3 +312,18 @@ class VolSDFNetwork(nn.Module):
         weights = alpha * transmittance # probability of the ray hits something here
 
         return weights
+
+    def plot_3d(self, querypoints):
+        import matplotlib
+        matplotlib.use('Agg')
+        from matplotlib import pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        ax.scatter(querypoints[:,0], querypoints[:,1], querypoints[:,2], s=1, c='b', marker='.', alpha=0.1)
+        ax.legend()
+        matplotlib.use('TkAgg')
+        plt.show()
+        plt.savefig('test.png')
+        plt.close()
+    
