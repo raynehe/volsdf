@@ -137,3 +137,7 @@ code/.idea/
 .DS_Store
 ._.DS_Store
 .idea/
+
+
+# add
+.vscode/

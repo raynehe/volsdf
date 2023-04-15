@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-import utils.general as utils
+import volsdf.code.utils.general as utils
 
 
 class VolSDFLoss(nn.Module):

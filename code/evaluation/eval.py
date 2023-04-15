@@ -10,9 +10,9 @@ from PIL import Image
 from tqdm import tqdm
 import pandas as pd
 
-import utils.general as utils
-import utils.plots as plt
-from utils import rend_util
+import volsdf.code.utils.general as utils
+import volsdf.code.utils.plots as plt
+from volsdf.code.utils import rend_util
 
 def evaluate(**kwargs):
     torch.set_default_dtype(torch.float32)

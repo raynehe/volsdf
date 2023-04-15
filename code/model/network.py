@@ -1,10 +1,10 @@
 import torch.nn as nn
 import numpy as np
 
-from utils import rend_util
-from model.embedder import *
-from model.density import LaplaceDensity
-from model.ray_sampler import ErrorBoundSampler
+from volsdf.code.utils import rend_util
+from volsdf.code.model.embedder import *
+from volsdf.code.model.density import LaplaceDensity
+from volsdf.code.model.ray_sampler import ErrorBoundSampler
 
 class ImplicitNetwork(nn.Module):
     def __init__(

@@ -3,11 +3,11 @@ import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 import sys
 
-sys.path.append('../code')
+sys.path.append('/home/rayne/code/nf2')
 import argparse
 import GPUtil
 
-from training.volsdf_train import VolSDFTrainRunner
+from volsdf.code.training.volsdf_train import VolSDFTrainRunner
 
 if __name__ == '__main__':
 

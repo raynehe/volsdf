@@ -8,7 +8,7 @@ import torchvision
 import trimesh
 from PIL import Image
 
-from utils import rend_util
+from volsdf.code.utils import rend_util
 
 
 def plot(implicit_network, indices, plot_data, path, epoch, img_res, plot_nimgs, resolution, grid_boundary, level=0):
